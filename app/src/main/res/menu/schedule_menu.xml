@@ -1,0 +1,24 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/scheduleMenuBtn"
+        android:title="Create schedule"
+        app:showAsAction="always"
+        android:visible="false"
+        android:icon="@drawable/ic_sharp_edit_calendar_24"
+        />
+    <item
+        android:id="@+id/statsButton"
+        android:title="Stats"
+        app:showAsAction="always"
+        android:icon="@drawable/baseline_query_stats_24"
+        />
+    <item
+        android:id="@+id/logout_item"
+        android:title="Logout"
+        app:showAsAction="always"
+        android:icon="@drawable/baseline_logout_24"
+        android:titleCondensed="Logout"
+        />
+
+</menu>

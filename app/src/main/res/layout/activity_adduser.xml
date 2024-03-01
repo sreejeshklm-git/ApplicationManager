@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingTop="60dp"
+        android:background="@color/lightBlue"
+        tools:context=".ui.adduser.AdduserActivity">
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_margin="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <androidx.appcompat.widget.AppCompatEditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/border"
+                android:padding="14dp"
+                android:maxLines="1"
+                android:layout_marginTop="16dp"
+                android:textColorHint="@color/grey"
+                android:textColor="@color/black"
+                android:id="@+id/edtUserName"
+                android:hint="@string/user_name" />
+
+            <androidx.appcompat.widget.AppCompatEditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/border"
+                android:textColorHint="@color/grey"
+                android:textColor="@color/black"
+                android:padding="14dp"
+                android:layout_marginTop="16dp"
+                android:id="@+id/edtEmail"
+                android:maxLines="1"
+                android:elevation="2dp"
+                android:hint="@string/email"
+                tools:ignore="UnusedAttribute" />
+
+            <androidx.appcompat.widget.AppCompatEditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/border"
+                android:textColorHint="@color/grey"
+                android:textColor="@color/black"
+                android:padding="14dp"
+                android:maxLines="1"
+                android:maxLength="6"
+                android:layout_marginTop="16dp"
+                android:id="@+id/edtPassword"
+                android:hint="@string/password" />
+            <androidx.appcompat.widget.AppCompatSpinner
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:padding="14dp"
+                android:id="@+id/spinnerUserType"/>
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/submit_button_border"
+                android:text="@string/add_user"
+                android:textStyle="bold"
+                android:layout_marginVertical="20dp"
+                android:layout_marginHorizontal="2dp"
+                android:textColor="@color/white"
+                android:id="@+id/btnAddUser"/>
+        </androidx.appcompat.widget.LinearLayoutCompat>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

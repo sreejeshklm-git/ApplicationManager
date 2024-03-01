@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "223618504145",
+    "project_id": "sharecareams",
+    "storage_bucket": "sharecareams.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:223618504145:android:716e55d1dd9a9870eb7cf0",
+        "android_client_info": {
+          "package_name": "com.robocora.appblockr"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCW3uGbzW_iXDyI5VZf2cqUi4eiF5uiyEE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
