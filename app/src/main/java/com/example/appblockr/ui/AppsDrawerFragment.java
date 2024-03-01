@@ -68,12 +68,14 @@ public class AppsDrawerFragment extends Fragment {
 
                 prefUtil.setUserName("");
                 prefUtil.setPassword("");
-                try {
-                    Intent intents = new Intent(getContext(), ForegroundService.class);
-                    intents.setAction(ForegroundService.ACTION_STOP_FOREGROUND_SERVICE);
-                    getContext().startService(intents);
-                }catch (Exception e){
-                    e.printStackTrace();
+                if (userType.equals("2")) {
+                    try {
+                        Intent intents = new Intent(getContext(), ForegroundService.class);
+                        intents.setAction(ForegroundService.ACTION_STOP_FOREGROUND_SERVICE);
+                        getContext().startService(intents);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 Intent intent=new Intent(getContext(), LoginPage.class);

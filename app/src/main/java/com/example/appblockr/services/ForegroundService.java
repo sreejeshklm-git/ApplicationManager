@@ -57,7 +57,7 @@ public class ForegroundService extends Service {
                 //Intrinsics.checkNotNullExpressionValue(var4, "NotificationCompat.Build…etContentText(\"\").build()");
                 Notification notification = var4;
                 this.startForeground(1, notification);
-                Log.e("amma", "amma");
+
                 this.startMyOwnForeground();
             }
         }
