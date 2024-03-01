@@ -1,5 +1,6 @@
 
 package com.example.appblockr.ui.adduser
+
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -7,11 +8,11 @@ import android.os.Build
 import android.os.Bundle
 import android.text.TextUtils
 import android.util.Patterns
+import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
-import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
@@ -19,7 +20,6 @@ import com.example.appblockr.AdminActivity
 import com.example.appblockr.R
 import com.example.appblockr.databinding.ActivityAdduserBinding
 import com.example.appblockr.utils.Utils
-
 import com.google.firebase.firestore.FirebaseFirestore
 import io.born.applicationmanager.firestore.User
 
@@ -33,8 +33,14 @@ class AdduserActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        supportActionBar?.displayOptions = ActionBar.DISPLAY_SHOW_CUSTOM;
-        supportActionBar?.setCustomView(R.layout.title_bar);
+       /* supportActionBar?.displayOptions = ActionBar.DISPLAY_SHOW_CUSTOM;
+        supportActionBar?.setCustomView(R.layout.title_bar);*/
+        supportActionBar!!.title = "Usage Status"
+        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            supportActionBar!!.setBackgroundDrawable(ColorDrawable(Color.parseColor("#03A9F4")))
+            this.window.statusBarColor = ContextCompat.getColor(this, R.color.appBackground)
+        }
         supportActionBar?.elevation = 0F
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             supportActionBar!!.setBackgroundDrawable(ColorDrawable(Color.parseColor("#5DB8E1")))
@@ -111,6 +117,11 @@ class AdduserActivity : AppCompatActivity() {
             return false
         }
         return true
+    }
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val id = item.itemId
+        onBackPressed()
+        return super.onOptionsItemSelected(item)
     }
     private fun isValidEmail(email: String): Boolean {
         return !TextUtils.isEmpty(email) && Patterns.EMAIL_ADDRESS.matcher(email).matches()

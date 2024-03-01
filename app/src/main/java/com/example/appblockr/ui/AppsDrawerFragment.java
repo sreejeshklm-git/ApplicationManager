@@ -24,6 +24,7 @@ import com.example.appblockr.LoginPage;
 import com.example.appblockr.MainActivity;
 import com.example.appblockr.R;
 import com.example.appblockr.adapter.AppsDrawerAdapter;
+import com.example.appblockr.services.ForegroundService;
 import com.example.appblockr.shared.SharedPrefUtil;
 
 
@@ -67,6 +68,13 @@ public class AppsDrawerFragment extends Fragment {
 
                 prefUtil.setUserName("");
                 prefUtil.setPassword("");
+                try {
+                    Intent intents = new Intent(getContext(), ForegroundService.class);
+                    intents.setAction(ForegroundService.ACTION_STOP_FOREGROUND_SERVICE);
+                    getContext().startService(intents);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
 
                 Intent intent=new Intent(getContext(), LoginPage.class);
                 startActivity(intent);
@@ -86,7 +94,7 @@ public class AppsDrawerFragment extends Fragment {
                     //finishAffinity();
 
                 } else if (userType.equals("2")) {
-                    Toast.makeText(getContext(), "Login Succesfull", Toast.LENGTH_SHORT).show();
+
                     Intent intent = new Intent(getContext(), MainActivity.class);
                     intent.putExtra("email", email);
                     startActivity(intent);

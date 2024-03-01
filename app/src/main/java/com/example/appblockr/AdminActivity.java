@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.appblockr.adapter.AdminAdapter;
 import com.example.appblockr.adapter.UserAdapter;
 import com.example.appblockr.model.AppData;
+import com.example.appblockr.services.ForegroundService;
 import com.example.appblockr.shared.SharedPrefUtil;
 import com.example.appblockr.ui.adduser.AdduserActivity;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -36,7 +37,7 @@ public class AdminActivity extends AppCompatActivity {
     private ArrayList courseNames;
     private Toolbar toolbar;
     private RecyclerView recyclerView;
-    private ImageView addIcon,logoutText;
+    private ImageView addIcon,logoutText,icBack;
     private FirebaseFirestore db;
     private TextView headerLable;
     ArrayList<String> usersList,emailList;
@@ -67,6 +68,7 @@ public class AdminActivity extends AppCompatActivity {
         addIcon = findViewById(R.id.add_icon);
         headerLable= findViewById(R.id.headerLable);
         logoutText = findViewById(R.id.logout);
+        icBack = findViewById(R.id.ic_back);
 
         if(userType.equals("2")){
             addIcon.setVisibility(View.GONE);
@@ -91,7 +93,16 @@ public class AdminActivity extends AppCompatActivity {
 
                 Intent intent=new Intent(getApplicationContext(), HomeActivity.class);
                 startActivity(intent);
+
                 finish();
+
+            }
+        });
+        icBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onBackPressed();
+
             }
         });
         addIcon.setOnClickListener(new View.OnClickListener() {
