@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 
+import com.example.appblockr.HomeActivity;
 import com.example.appblockr.R;
 import com.example.appblockr.adapter.AppListAdapter;
 import com.example.appblockr.model.AppData;
@@ -61,6 +62,7 @@ public class AppListActivity extends AppCompatActivity implements AppListAdapter
         // ...
         super.onCreate(savedInstanceState);
       getSupportActionBar().setTitle("All Applications");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#03A9F4")));
             this.getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.appBackground));
@@ -87,6 +89,7 @@ displayAppsList = new ArrayList<>();
 //
 
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.schedule_menu, menu);
@@ -99,6 +102,16 @@ displayAppsList = new ArrayList<>();
             Intent myIntent = new Intent(AppListActivity.this, UsesStatsActivity.class);
             myIntent.putExtra("email", usersEmail);
             AppListActivity.this.startActivity(myIntent);
+        }else   if (id == R.id.logout_item) {
+            prefUtil.setUserName("");
+            prefUtil.setPassword("");
+
+            Intent intent=new Intent(getApplicationContext(), HomeActivity.class);
+            startActivity(intent);
+            finish();
+        }
+        else{
+            onBackPressed();
         }
 
         return super.onOptionsItemSelected(item);

@@ -36,7 +36,9 @@ public class ForegroundService extends Service {
     private long timerReload = 500L;
 
     private ArrayList currentAppActivityList = new ArrayList();
+    public static final String ACTION_START_FOREGROUND_SERVICE = "ACTION_START_FOREGROUND_SERVICE";
 
+    public static final String ACTION_STOP_FOREGROUND_SERVICE = "ACTION_STOP_FOREGROUND_SERVICE";
     public void onCreate() {
         super.onCreate();
         String channelId = "AppLock-10";
@@ -63,6 +65,12 @@ public class ForegroundService extends Service {
 
     public int onStartCommand(@NotNull Intent intent, int flags, int startId) {
       //  Intrinsics.checkNotNullParameter(intent, "intent");
+        if(intent.getAction()!=null){
+          if (intent.getAction().equals(ACTION_STOP_FOREGROUND_SERVICE)) {
+              this.stopForeground(true);
+              this.stopSelf();
+            }
+        }
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -104,6 +112,10 @@ public class ForegroundService extends Service {
     public void onDestroy() {
         this.timer.cancel();
         super.onDestroy();
+    }
+    public   void stopService() {
+        this.stopForeground(true);
+        this.stopSelf();
     }
 }
 

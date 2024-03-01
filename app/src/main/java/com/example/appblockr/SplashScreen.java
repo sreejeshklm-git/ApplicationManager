@@ -38,7 +38,7 @@ public class SplashScreen extends AppCompatActivity {
         String password = prefUtil.getPassword("password");
         String userType = prefUtil.getUserType("user_type");
         String email = prefUtil.getEmail("email");
-        ContextCompat.startForegroundService(this, new Intent(this, ForegroundService.class));
+        //ContextCompat.startForegroundService(this, new Intent(this, ForegroundService.class));
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
