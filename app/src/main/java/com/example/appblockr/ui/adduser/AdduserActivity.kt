@@ -28,7 +28,7 @@ class AdduserActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAdduserBinding
     private lateinit var db : FirebaseFirestore
 
-    private val spinnerData : ArrayList<String> = arrayListOf("Pleas select User Type","User","Admin")
+    private val spinnerData : ArrayList<String> = arrayListOf("Please select User Type","User","Admin")
     private var user_type = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,8 +43,14 @@ class AdduserActivity : AppCompatActivity() {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_adduser)
 
        db = FirebaseFirestore.getInstance()
-
-        binding.spinnerUserType.adapter = ArrayAdapter<String>(this,android.R.layout.simple_spinner_item,spinnerData)
+        val ad: ArrayAdapter<String> = ArrayAdapter<String>(
+            this,
+            android.R.layout.simple_spinner_item,
+            spinnerData
+        )
+        ad.setDropDownViewResource(android.R.layout
+            .simple_spinner_dropdown_item)
+        binding.spinnerUserType.adapter = ad
 
         binding.spinnerUserType.onItemSelectedListener = object :AdapterView.OnItemSelectedListener{
             override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {

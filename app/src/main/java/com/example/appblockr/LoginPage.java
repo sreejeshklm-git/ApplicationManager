@@ -8,6 +8,7 @@ import androidx.appcompat.widget.AppCompatButton;
 import androidx.databinding.DataBindingUtil;
 
 import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -53,7 +54,7 @@ public class LoginPage extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 //        getSupportActionBar().setTitle("Login");
         binding = DataBindingUtil.setContentView(this, R.layout.activity_login_page);
-
+        binding.progressBarCyclic.setVisibility(View.INVISIBLE);
         prefUtil = new SharedPrefUtil(getApplicationContext());
         db = FirebaseFirestore.getInstance();
         android_id = Settings.Secure.getString(this.getContentResolver(),
@@ -76,6 +77,8 @@ public class LoginPage extends AppCompatActivity {
         binding.buttonLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                binding.progressBarCyclic.setVisibility(View.VISIBLE);
+                binding.progressBarCyclic.setProgress(200);
                 Utils.hideKeyboard(LoginPage.this);
                 String email = binding.editTextEmail.getText().toString().trim();
                 String password = binding.editTextPassword.getText().toString().trim();
@@ -83,6 +86,7 @@ public class LoginPage extends AppCompatActivity {
                 if (isValidEmail(email) && isValidPassword(password)) {
                     readDBLogin(email, password);
                 } else {
+                    binding.progressBarCyclic.setVisibility(View.GONE);
                     if (email.isEmpty()) {
                         binding.editTextEmail.setError("Email is required");
                     }
@@ -126,6 +130,7 @@ public class LoginPage extends AppCompatActivity {
                             int documentSize = documents.getDocuments().size();
                             Log.e("Size==", "" + documentSize);
                             if (documentSize > 0) {
+                                binding.progressBarCyclic.setVisibility(View.GONE);
                                 for (DocumentSnapshot document : task.getResult()) {
                                     user = document.toObject(User.class);
 
@@ -170,10 +175,12 @@ public class LoginPage extends AppCompatActivity {
 
                                 }
                             } else {
+                                binding.progressBarCyclic.setVisibility(View.GONE);
                                 binding.errorText.setVisibility(View.VISIBLE);
                                 Toast.makeText(getApplicationContext(), "Invalid Credentials", Toast.LENGTH_LONG).show();
                             }
 
+                            binding.progressBarCyclic.setVisibility(View.GONE);
 
                         }
                     }
