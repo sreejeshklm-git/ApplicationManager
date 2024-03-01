@@ -11,6 +11,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -265,8 +266,13 @@ public class MainActivity extends AppCompatActivity implements AppListAdapter.To
 
     private void addIconToBar() {
         getSupportActionBar().setDisplayShowHomeEnabled(true);
-        getSupportActionBar().setLogo(R.mipmap.ic_launcher_zz);
-        getSupportActionBar().setDisplayUseLogoEnabled(true);
+       // getSupportActionBar().setLogo(R.mipmap.ic_launcher_zz);
+       // getSupportActionBar().setDisplayUseLogoEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#03A9F4")));
+            this.getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.appBackground));
+        }
         setContentView(R.layout.activity_main);
     }
 
@@ -402,14 +408,24 @@ public class MainActivity extends AppCompatActivity implements AppListAdapter.To
         }else if(id == R.id.logout_item){
                 prefUtil.setUserName("");
                 prefUtil.setPassword("");
+
+            try {
+                Intent intents = new Intent(MainActivity.this, ForegroundService.class);
+                intents.setAction(ForegroundService.ACTION_STOP_FOREGROUND_SERVICE);
+                startService(intents);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
                 Intent intent=new Intent(getApplicationContext(), LoginPage.class);
                 startActivity(intent);
                 finishAffinity();
         }
-        if (id == R.id.statsButton) {
+        else if (id == R.id.statsButton) {
             Intent myIntent = new Intent(MainActivity.this, UsesStatsActivity.class);
             myIntent.putExtra("email", usersEmail);
             MainActivity.this.startActivity(myIntent);
+        }else{
+           onBackPressed();
         }
 
         return super.onOptionsItemSelected(item);

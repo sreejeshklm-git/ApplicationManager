@@ -1,23 +1,32 @@
 package com.example.appblockr.ui.stats;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.example.appblockr.HomeActivity;
 import com.example.appblockr.R;
 import com.example.appblockr.adapter.StatsAppListAdapter;
 import com.example.appblockr.databinding.ActivityUsesStatsBinding;
 import com.example.appblockr.model.AppUsesData;
 import com.example.appblockr.model.StatsModel;
 import com.example.appblockr.model.UsesStatsDataModel;
+import com.example.appblockr.ui.adduser.AppListActivity;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentReference;
@@ -47,8 +56,15 @@ public class UsesStatsActivity extends AppCompatActivity implements View.OnClick
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
-        getSupportActionBar().setCustomView(R.layout.stats_title_bar);
+
+        getSupportActionBar().setTitle("Usage Status");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#03A9F4")));
+            this.getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.appBackground));
+        }
+       // getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+       // getSupportActionBar().setCustomView(R.layout.stats_title_bar);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_uses_stats);
         dialog = new ProgressDialog(UsesStatsActivity.this);
 
@@ -60,6 +76,14 @@ public class UsesStatsActivity extends AppCompatActivity implements View.OnClick
         binding.btnToday.setBackgroundResource(R.drawable.active_round);
         SimpleDateFormat sdf = new SimpleDateFormat("dd:MM:yyyy");
         String currentDate = sdf.format( new Date());
+       /* ImageView icBack= findViewById(R.id.ic_back);
+        icBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onBackPressed();
+
+            }
+        });*/
         getAppListFromDb(currentDate);
 
 
@@ -154,7 +178,15 @@ public class UsesStatsActivity extends AppCompatActivity implements View.OnClick
         //use resultStats list for updating data to Recyclerview
         Log.d("##getRangedDateStats", "Size :: " + finalList.size());
     }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
 
+            onBackPressed();
+
+
+        return super.onOptionsItemSelected(item);
+    }
     private ArrayList<AppUsesData> getAllStats() {
         ArrayList<AppUsesData> resultStats = new ArrayList();
 
