@@ -9,6 +9,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.util.Pair;
 import androidx.databinding.DataBindingUtil;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -20,6 +21,9 @@ import com.example.appblockr.model.StatsModel;
 import com.example.appblockr.model.UsesStatsDataModel;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.datepicker.CalendarConstraints;
+import com.google.android.material.datepicker.DateValidatorPointBackward;
+import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -27,10 +31,13 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class UsesStatsActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -50,8 +57,19 @@ public class UsesStatsActivity extends AppCompatActivity implements View.OnClick
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
         getSupportActionBar().setCustomView(R.layout.stats_title_bar);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_uses_stats);
-        dialog = new ProgressDialog(UsesStatsActivity.this);
 
+        binding.calenderIconStartDate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                datePickerdialog();
+            }
+        });
+
+        binding.calenderIconEndDate.setOnClickListener(view -> {
+            datePickerdialog();
+        });
+
+        dialog = new ProgressDialog(UsesStatsActivity.this);
         db = FirebaseFirestore.getInstance();
         usersEmail = getIntent().getStringExtra("email");
         dayWiseStatsList = new ArrayList<StatsModel>();
@@ -62,10 +80,94 @@ public class UsesStatsActivity extends AppCompatActivity implements View.OnClick
         String currentDate = sdf.format( new Date());
         getAppListFromDb(currentDate);
 
-
         initUi();
+    }
+
+    private void datePickerdialog() {
+
+        // Creating a MaterialDatePicker builder for selecting a date range
+        MaterialDatePicker.Builder<Pair<Long, Long>> builder = MaterialDatePicker.Builder.dateRangePicker();
+              //  .setSelection(new Pair<>(startmillis,endMillis));
+        builder.setTitleText("Select a date range");
 
 
+        CalendarConstraints.Builder constraintsBuilderRange = new CalendarConstraints.Builder()
+                .setValidator(DateValidatorPointBackward.now());
+        builder.setCalendarConstraints(constraintsBuilderRange.build());
+
+
+        // Building the date picker dialog
+        MaterialDatePicker<Pair<Long, Long>> datePicker = builder.build();
+        datePicker.addOnPositiveButtonClickListener(selection -> {
+
+            // Retrieving the selected start and end dates
+            Long startDate = selection.first;
+            Long endDate = selection.second;
+
+            // Formating the selected dates as strings
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+            String startDateString = sdf.format(new Date(startDate));
+            String endDateString = sdf.format(new Date(endDate));
+
+
+            // Creating the date range string
+            String selectedDateRange = startDateString + " - " + endDateString;
+            binding.one.setText(startDateString);
+            binding.two.setText(endDateString);
+            Toast.makeText(getApplicationContext(), "Your selected Start date  and End date is"+selectedDateRange, Toast.LENGTH_SHORT).show();
+
+            List<Date> multipleSelection=getDates(startDateString,endDateString);
+            for(int i=0;i<multipleSelection.size();i++){
+                Log.e("ListOfDates==",""+multipleSelection.get(i));
+
+                Date date =multipleSelection.get(i);
+                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                String strDate = dateFormat.format(date);
+                Log.e("DateFormat==",""+strDate);
+            }
+        });
+
+        // Showing the date picker dialog
+        datePicker.show(getSupportFragmentManager(), "DATE_PICKER");
+    }
+
+    public static String getCurrentDate() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy MM dd hh:mm a zzz");
+        Date date = new Date();
+        sdf.setTimeZone(TimeZone.getTimeZone("GMT+6:00"));
+        return sdf.format(date);
+    }
+
+
+
+    private static List<Date> getDates(String dateString1, String dateString2)
+    {
+        ArrayList<Date> dates = new ArrayList<Date>();
+        SimpleDateFormat df1 = new SimpleDateFormat("dd/MM/yyyy");
+
+        Date date1 = null;
+        Date date2 = null;
+
+        try {
+            date1 = df1 .parse(dateString1);
+            date2 = df1 .parse(dateString2);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Calendar cal1 = Calendar.getInstance();
+        cal1.setTime(date1);
+
+
+        Calendar cal2 = Calendar.getInstance();
+        cal2.setTime(date2);
+
+        while(!cal1.after(cal2))
+        {
+            dates.add(cal1.getTime());
+            cal1.add(Calendar.DATE, 1);
+        }
+        return dates;
     }
 
     private void initUi() {
