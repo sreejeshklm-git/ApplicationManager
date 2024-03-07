@@ -13,16 +13,15 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.appblockr.model.AppUsesData
 import com.example.appblockr.model.StatsModel
-import com.example.appblockr.model.UsesStatsDataModel
-import com.google.firebase.firestore.DocumentReference
+import com.example.appblockr.realm.DailyStats
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.DelicateCoroutinesApi
+import com.google.gson.Gson
+import io.realm.Realm
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
 
 class StatsWorkerManager(
     val context: Context,
@@ -32,8 +31,10 @@ class StatsWorkerManager(
     private lateinit var usersEmail: String
     private var isDateAvailable: Boolean? = false
     lateinit var db: FirebaseFirestore
-    private var statsDataModel: UsesStatsDataModel? = null
+//    private var statsDataModel: UsesStatsDataModel? = null
     private var appLaunchCountPerDay: HashMap<String, Int> = HashMap()
+
+    private lateinit var realm : Realm;
 
 
     override suspend fun doWork(): Result {
@@ -41,12 +42,13 @@ class StatsWorkerManager(
         usersEmail = inputData.getString("KEY_USER_EMAIL").toString()
         db = FirebaseFirestore.getInstance()
 
+        realm = Realm.getDefaultInstance()
         uploadStatsToFireStoreDb()
 
         return Result.success()
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
+
     @SuppressLint("SimpleDateFormat")
     private fun uploadStatsToFireStoreDb() {
 
@@ -56,114 +58,30 @@ class StatsWorkerManager(
 
         GlobalScope.launch {
             Log.d("##StatsFromFirebase", "Coroutine started")
-            var firebaseStats: ArrayList<StatsModel>? = ArrayList<StatsModel>()
-            val result1 = async {
-                firebaseStats = getStatsFromFirebaseDb()
+
+            var dailyStats: ArrayList<AppUsesData> = ArrayList()
+            val result = async {
+
+                Log.d("##StatsFromFirebase", "Async started")
+                dailyStats = getAppUsageData()
+                Log.d("##StatsFromFirebase", "dailyStats::" + dailyStats.size)
             }
-            result1.await()
-            Log.d("##StatsFromFirebase", "firebaseStats:: " + firebaseStats.isNullOrEmpty())
+            result.await()
+            Log.d("##StatsFromFirebase", "result await ended")
 
+            //pushing daily stats in to Firebase Database
+            db.collection(usersEmail).document(currentDate).set(StatsModel(dailyStats))
 
-            firebaseStats.let {
-                it?.forEach { statsObj ->
-                    Log.d("##StatsFromFirebase", "forEach:: " + statsObj.date)
-
-                    if (statsObj.date.contains(currentDate)) {
-                        isDateAvailable = true
-                    }
-                }
-            }
-            if (isDateAvailable == true) {
-                //do not insert daily stats in to firebase Db
-                Log.d("##StatsFromFirebase", "" + isDateAvailable)
-            } else {
-                var dailyStats: ArrayList<AppUsesData> = ArrayList()
-                val result = async {
-
-                    Log.d("##StatsFromFirebase", "Async started")
-                    dailyStats = getAppUsageData()
-                    Log.d("##StatsFromFirebase", "dailyStats::" + dailyStats.size)
-                }
-                result.await()
-                Log.d("##StatsFromFirebase", "result await ended")
-
-
-                if (statsDataModel == null) {
-                    Log.d("##StatsFromFirebase", "statsDataModel is null")
-                    val latestStats = ArrayList<StatsModel>()
-                    latestStats.add(StatsModel(currentDate, dailyStats))
-                    statsDataModel = UsesStatsDataModel(usersEmail,latestStats)
-
-                    statsDataModel?.let {
-                        db.collection("app_stats").document(usersEmail).set(it)
-                    }
-
-                } else {
-                    Log.d("##StatsFromFirebase", "statsDataModel is not null")
-                    Log.d("##StatsFromFirebase", "Email:: " + statsDataModel?.email)
-                    Log.d(
-                        "##StatsFromFirebase",
-                        "Root Size:: " + statsDataModel?.dataArrayList?.size
-                    )
-
-                    val model = StatsModel(currentDate, dailyStats)
-                    val list: ArrayList<StatsModel> = ArrayList()
-                    if (statsDataModel?.dataArrayList.isNullOrEmpty()) {
-                        statsDataModel?.dataArrayList = ArrayList<StatsModel>()
-                        Log.d("##StatsFromFirebase", "List is null form fireDb")
-                    } else {
-                        statsDataModel?.dataArrayList?.let { list.addAll(it) }
-                    }
-                    list.add(model)
-                    val usageStats = UsesStatsDataModel(usersEmail, list)
-                    usageStats.email?.let { Log.d("##StatsFromFirebase", it) }
-
-                    usageStats.let {
-                        db.collection("app_stats").document(usersEmail).set(it)
-                    }
-                }
-
-            }
-
+            //RealM Database
+            val stats = DailyStats("1", currentDate, Gson().toJson(dailyStats), "", false)
+            //realm.insert(stats)
 
         }
 
     }
 
-    private suspend fun getStatsFromFirebaseDb(): ArrayList<StatsModel>? {
 
-        val dayWiseStatsList: ArrayList<StatsModel> = ArrayList()
-        val docRef: DocumentReference = db.collection("app_stats").document(usersEmail);
-        docRef.get().addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                val document = task.result
-                try {
-                    if (document.exists()) {
-                        statsDataModel =
-                            document.toObject<UsesStatsDataModel>(UsesStatsDataModel::class.java)
-                        statsDataModel?.let {
-                            it.dataArrayList?.let { it1 ->
-                                dayWiseStatsList.addAll(it1)
-                                Log.d("##StatsFromFirebase", "DocRef:: " + dayWiseStatsList.size)
-                            }
-                        }
-
-                    } else {
-                        //statsDataModel = UsesStatsDataModel()
-                        Log.d("##StatsFromFirebase", "Doc not exist")
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            } else {
-                Log.i("TAG", "get failed with ", task.exception)
-            }
-        }
-        Log.d("##StatsFromFirebase",""+dayWiseStatsList.size)
-        return dayWiseStatsList
-    }
-
-    fun getAppUsageData(): ArrayList<AppUsesData> {
+    private fun getAppUsageData(): ArrayList<AppUsesData> {
         var usageStats: List<UsageStats>? = null
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             usageStats = getAppUsageStats(context = context) as List<UsageStats>?
@@ -255,6 +173,14 @@ class StatsWorkerManager(
         }
         appLaunchCountPerDay.put(packageName, launchCount + 1)
         return launchCount + 1
+    }
+
+    private fun getUserDocList(){
+        db.collection(usersEmail).get().addOnSuccessListener { doc ->
+            for (document in doc){
+                Log.d("##getUserDocList",doc.toString())
+            }
+        }
     }
 
 

@@ -17,10 +17,8 @@ import com.example.appblockr.adapter.StatsAppListAdapter;
 import com.example.appblockr.databinding.ActivityUsesStatsBinding;
 import com.example.appblockr.model.AppUsesData;
 import com.example.appblockr.model.StatsModel;
-import com.example.appblockr.model.UsesStatsDataModel;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -30,19 +28,23 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public class UsesStatsActivity extends AppCompatActivity implements View.OnClickListener {
 
     private ActivityUsesStatsBinding binding;
     private String usersEmail;
-    private UsesStatsDataModel statsDataModel;
+
     private FirebaseFirestore db;
     private StatsAppListAdapter adapter;
-    private ArrayList<StatsModel> dayWiseStatsList;
-    private ArrayList<StatsModel> finalList;
-    private ArrayList<AppUsesData> appUsageList;
+
+//    private ArrayList<AppUsesData> appUsageList;
     private ProgressDialog dialog;
+    String yesterday;
+
+    HashMap<String,StatsModel> finalDocsMap = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,14 +56,15 @@ public class UsesStatsActivity extends AppCompatActivity implements View.OnClick
 
         db = FirebaseFirestore.getInstance();
         usersEmail = getIntent().getStringExtra("email");
-        dayWiseStatsList = new ArrayList<StatsModel>();
-        finalList = new ArrayList<StatsModel>();
-        appUsageList = new ArrayList<AppUsesData>();
-        binding.btnToday.setBackgroundResource(R.drawable.active_round);
-        SimpleDateFormat sdf = new SimpleDateFormat("dd:MM:yyyy");
-        String currentDate = sdf.format( new Date());
-        getAppListFromDb(currentDate);
 
+        binding.btnToday.setBackgroundResource(R.drawable.active_round);
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd:MM:yyyy");
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DATE, -1);
+        yesterday = sdf.format(cal.getTime());
+
+        fetchAllStatsFromDb();
 
         initUi();
 
@@ -75,121 +78,48 @@ public class UsesStatsActivity extends AppCompatActivity implements View.OnClick
         binding.btnLastWeek.setOnClickListener(this);
         binding.btnLastMonth.setOnClickListener(this);
 //
-//        adapter = new StatsAppListAdapter(appUsageList, getApplicationContext());
-//        binding.statsAppsList.setLayoutManager(new LinearLayoutManager(UsesStatsActivity.this));
-//        binding.statsAppsList.setAdapter(adapter);
+        adapter = new StatsAppListAdapter(new ArrayList<AppUsesData>(), getApplicationContext());
+        binding.statsAppsList.setLayoutManager(new LinearLayoutManager(UsesStatsActivity.this));
+        binding.statsAppsList.setAdapter(adapter);
+
+        binding.btnYesterday.setBackgroundResource(R.drawable.active_round);
+        getYesterdayStatFromDb();
     }
 
-    public void getAppListFromDb(String currentDate) {
-        dayWiseStatsList.clear();
-        appUsageList.clear();
-        dialog.show();
-        DocumentReference docRef = db.collection(usersEmail).document(currentDate);
-        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful()) {
-                    DocumentSnapshot document = task.getResult();
-                    try {
-                        if (document.exists()) {
-                            statsDataModel = document.toObject(UsesStatsDataModel.class);
-                            dayWiseStatsList.addAll(statsDataModel.getDataArrayList());
 
-                            /*ArrayList<String> dates = new ArrayList<>();
-                            dates.add("26:02:2024");
-                            dates.add("25:02:2024");
-                            dates.add("28:02:2024");
-                            getRangedDateStats(dates);*/
-
-                            for (StatsModel statsModel : dayWiseStatsList) {
-                                if (!appUsageList.contains(statsModel.getDataArrayList())) {
-                                    appUsageList.addAll(statsModel.getDataArrayList());
-                                }
-                            }
-
-
-
-                            adapter = new StatsAppListAdapter(appUsageList, getApplicationContext());
-                            binding.statsAppsList.setLayoutManager(new LinearLayoutManager(UsesStatsActivity.this));
-                            binding.statsAppsList.setAdapter(adapter);
-
-                        } else {
-                            Toast.makeText(UsesStatsActivity.this, "No Apps found", Toast.LENGTH_SHORT).show();
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    Log.i("TAG", "get failed with ", task.getException());
-                }
-            }
-        });
-        dialog.dismiss();
-    }
-
-    /*
-        Yesterday or last 7 days or last month dates should pass as array to getRangedDateStats() method
-        Ex Yesterday : [26:02:2023]
-        Ex last 7days : [20:02:2023,21:02:2023,22:02:2023,23:02:2023,24:02:2023,25:02:2023,26:02:2023]
-        We have ${dayWiseStatsList} hold date and daily stats
-     */
     private void getRangedDateStats(ArrayList<String> dates) {
-        Log.d("##getRangedDateStats",dates.toString());
-        if (finalList != null || !finalList.isEmpty()) {
-            finalList.clear();
-        }
-//        ArrayList<StatsModel> resultStats = new ArrayList();
-        for (int x= 0;x<dayWiseStatsList.size();x++) {
+        HashMap<String,AppUsesData> aggregatedMap = new HashMap<>();
 
-            Log.d("##getRangedDateStats",dayWiseStatsList.get(x).getDate()+ "Position :: "+x);
-            if (dates.contains(dayWiseStatsList.get(x).getDate())) {
-                Log.d("##getRangedDateStats", "Date :: " + dayWiseStatsList.get(x).getDate());
-                finalList.add(dayWiseStatsList.get(x));
-            }
-            Log.d("##getRangedDateStats","resultStatsList Size:: "+ finalList.size());
+        for (Map.Entry<String, StatsModel> entry : finalDocsMap.entrySet()) {
+            if (dates.contains(entry.getKey())) {
+//                appUsageList.addAll(entry.getValue().getDataArrayList());
 
-
-        }
-
-        //use resultStats list for updating data to Recyclerview
-        Log.d("##getRangedDateStats", "Size :: " + finalList.size());
-    }
-
-    private ArrayList<AppUsesData> getAllStats() {
-        ArrayList<AppUsesData> resultStats = new ArrayList();
-
-        Log.d("##getAllStats","resultStatsList Size:: "+ finalList.size());
-        for (StatsModel stats : finalList) {
-
-            for (AppUsesData appData : stats.getDataArrayList()) {
-
-                if (resultStats == null || resultStats.isEmpty()) {
-                    resultStats.addAll(stats.getDataArrayList());
-                    Log.d("##getAllStats","resultStats Size:: "+resultStats.size());
-
-                } else {
-                    for (int i = 0; i < resultStats.size(); i++) {
-                        AppUsesData tempModel = resultStats.get(i);
-                        Log.d("##",tempModel.getAppName());
-                        if (tempModel.getBundle_id().equals(appData.getBundle_id())) {
-                            resultStats.get(i).setStartTime(appData.getStartTime() + tempModel.getStartTime());
-                            resultStats.get(i).setEndTime(appData.getEndTime() + tempModel.getEndTime());
-                            resultStats.get(i).setUsageTime(appData.getUsageTime() + tempModel.getUsageTime());
-                            resultStats.get(i).setLaunchCount(appData.getLaunchCount() + tempModel.getLaunchCount());
-                            resultStats.add(i, resultStats.get(i));
-                        }
+                for (AppUsesData model : entry.getValue().getDataArrayList()) {
+                    String name = model.getAppName();
+                    int count = model.getLaunchCount();
+                    String usageTime = model.getUsageTime();
+                    //check if name already exists
+                    if (aggregatedMap.containsKey(name)) {
+                        AppUsesData existingStat = aggregatedMap.get(name);
+                        assert existingStat != null;
+                        existingStat.setLaunchCount(existingStat.getLaunchCount() +  count);
+                        existingStat.setUsageTime(existingStat.getUsageTime() +  usageTime);
+                    }else{
+                        aggregatedMap.put(name,model);
                     }
                 }
 
+                //adapter.addItems(appUsageList);
             }
-
         }
 
-        //use resultStats list for updating data to Recyclerview
-        Log.d("##getRangedDateStats", "Size :: " + resultStats.size());
-        return resultStats;
-    }
+        ArrayList<AppUsesData> aggregateList = new ArrayList<>();
+        for (AppUsesData item : aggregatedMap.values()) {
+            aggregateList.add(item);
+        }
 
+        adapter.addItems(aggregateList);
+    }
 
     private ArrayList<String> getLastMonthDatesInFormat() {
         ArrayList<String> lastMonthList = new ArrayList<>();
@@ -242,9 +172,18 @@ public class UsesStatsActivity extends AppCompatActivity implements View.OnClick
             case R.id.btn_today:
                 SimpleDateFormat sdf = new SimpleDateFormat("dd:MM:yyyy");
                 String currentDate = sdf.format( new Date());
-                getAppListFromDb(currentDate);
 
-                binding.btnToday.setBackgroundResource(R.drawable.active_round);
+               /* appUsageList.clear();
+                adapter.addItems(null);
+
+                for (Map.Entry<String, StatsModel> entry : finalDocsMap.entrySet()) {
+                    if (entry.getKey().equals(currentDate)) {
+                        appUsageList = entry.getValue().getDataArrayList();
+                        adapter.addItems(appUsageList);
+                    }
+                }*/
+
+//                binding.btnToday.setBackgroundResource(R.drawable.active_round);
                 binding.btnYesterday.setBackgroundResource(R.drawable.non_active_round);
                 binding.btnLastWeek.setBackgroundResource(R.drawable.non_active_round);
                 binding.btnLastMonth.setBackgroundResource(R.drawable.non_active_round);
@@ -252,13 +191,9 @@ public class UsesStatsActivity extends AppCompatActivity implements View.OnClick
                 break;
             case R.id.btn_yesterday:
                 ArrayList<String> dateList = getYesterdayDateInFormat();
-//                Log.d("DateList  -D=  ", dateList.toString());
-//                getRangedDateStats(dateList);
-//                adapter.addItems(getAllStats());
+                getRangedDateStats(dateList);
 
-                getAppListFromDb(dateList.get(0));
-
-                binding.btnToday.setBackgroundResource(R.drawable.non_active_round);
+//                binding.btnToday.setBackgroundResource(R.drawable.non_active_round);
                 binding.btnYesterday.setBackgroundResource(R.drawable.active_round);
                 binding.btnLastWeek.setBackgroundResource(R.drawable.non_active_round);
                 binding.btnLastMonth.setBackgroundResource(R.drawable.non_active_round);
@@ -266,24 +201,24 @@ public class UsesStatsActivity extends AppCompatActivity implements View.OnClick
                 break;
             case R.id.btn_last_week:
                 ArrayList<String> lastWeekDates = getLastWeekDatesInFormat();
-                Log.d("DateList:: -W=  ", lastWeekDates.toString());
-//                getRangedDateStats(lastWeekDates);
-//                adapter.addItems(getAllStats());
-                getAppTotalListFromDb();
 
-                binding.btnToday.setBackgroundResource(R.drawable.non_active_round);
+                Log.d("DateList:: -W=  ", "Size:: "+lastWeekDates.size());
+                Log.d("DateList:: -W=  ", lastWeekDates.toString());
+
+                getRangedDateStats(lastWeekDates);
+//                binding.btnToday.setBackgroundResource(R.drawable.non_active_round);
                 binding.btnYesterday.setBackgroundResource(R.drawable.non_active_round);
                 binding.btnLastWeek.setBackgroundResource(R.drawable.active_round);
                 binding.btnLastMonth.setBackgroundResource(R.drawable.non_active_round);
                 break;
             case R.id.btn_last_month:
-                appUsageList.clear();
+
                 ArrayList<String> lastMonthDates = getLastMonthDatesInFormat();
                 Log.d("DateList :: -M=  ", lastMonthDates.toString());
-//                getRangedDateStats(lastMonthDates);
-//                adapter.addItems(getAllStats());
+                Log.d("DateList:: -W=  ", "Size:: "+lastMonthDates.size());
 
-                getAppTotalListFromDb();
+                getRangedDateStats(lastMonthDates);
+
                 binding.btnToday.setBackgroundResource(R.drawable.non_active_round);
                 binding.btnYesterday.setBackgroundResource(R.drawable.non_active_round);
                 binding.btnLastWeek.setBackgroundResource(R.drawable.non_active_round);
@@ -296,38 +231,49 @@ public class UsesStatsActivity extends AppCompatActivity implements View.OnClick
     }
 
 
-    public void getAppTotalListFromDb() {
-        dayWiseStatsList.clear();
-        appUsageList.clear();
+    public void getYesterdayStatFromDb() {
         dialog.show();
-        db.collection(usersEmail)
+        db.collection(usersEmail).document(yesterday)
                 .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                     @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
                         if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                if (document.exists()) {
-                                    statsDataModel = document.toObject(UsesStatsDataModel.class);
-                                    dayWiseStatsList.addAll(statsDataModel.getDataArrayList());
-                                    for (StatsModel statsModel : dayWiseStatsList) {
-                                        if (!appUsageList.contains(statsModel.getDataArrayList())) {
-                                            appUsageList.addAll(statsModel.getDataArrayList());
-                                        }
-                                    }
-                                    adapter = new StatsAppListAdapter(appUsageList, getApplicationContext());
+                            DocumentSnapshot document = task.getResult();
+                            if (document.exists()) {
+                                StatsModel model = document.toObject(StatsModel.class);
+                                if (model != null) {
+//                                    appUsageList = model.getDataArrayList();
+                                    adapter.addItems(model.getDataArrayList());
+                                    /*adapter = new StatsAppListAdapter(appUsageList, getApplicationContext());
                                     binding.statsAppsList.setLayoutManager(new LinearLayoutManager(UsesStatsActivity.this));
-                                    binding.statsAppsList.setAdapter(adapter);
-
+                                    binding.statsAppsList.setAdapter(adapter);*/
                                 } else {
                                     Toast.makeText(UsesStatsActivity.this, "No Apps found", Toast.LENGTH_SHORT).show();
                                 }
+                            } else {
+                                Toast.makeText(UsesStatsActivity.this, "No Document found", Toast.LENGTH_SHORT).show();
                             }
-                        } else {
-
                         }
                     }
                 });
         dialog.dismiss();
+    }
+
+    private void fetchAllStatsFromDb(){
+        ArrayList<String> docDateList = new ArrayList<>();
+        db.collection(usersEmail).get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        Log.d("##getAllDocs", document.getId() + " => " + document.getData());
+                        docDateList.add(document.getId());
+                        finalDocsMap.put(document.getId(),document.toObject(StatsModel.class));
+
+                    }
+                }
+            }
+        });
     }
 }

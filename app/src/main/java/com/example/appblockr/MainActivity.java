@@ -32,6 +32,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.work.Constraints;
+import androidx.work.Data;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 
 import com.example.appblockr.adapter.AppListAdapter;
 import com.example.appblockr.adapter.LockedAppAdapter;
@@ -40,10 +46,10 @@ import com.example.appblockr.model.AppModel;
 import com.example.appblockr.model.AppUsesData;
 import com.example.appblockr.model.ApplicationListModel;
 import com.example.appblockr.model.StatsModel;
-import com.example.appblockr.model.UsesStatsDataModel;
 import com.example.appblockr.services.BackgroundManager;
 import com.example.appblockr.services.ForegroundService;
 import com.example.appblockr.services.MyAccessibilityService;
+import com.example.appblockr.services.StatsWorkerManager;
 import com.example.appblockr.shared.SharedPrefUtil;
 import com.example.appblockr.ui.stats.UsesStatsActivity;
 import com.example.appblockr.utils.DemoKot;
@@ -56,6 +62,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity implements AppListAdapter.ToggleCheckedListener {
 
@@ -110,8 +117,8 @@ public class MainActivity extends AppCompatActivity implements AppListAdapter.To
         //BackgroundManager.getInstance().init(this).startAlarmManager();
         ContextCompat.startForegroundService(this, new Intent(this, ForegroundService.class));
 
-        //   BackgroundManager.getInstance().init(this).startService();
-       // BackgroundManager.getInstance().init(this).startAlarmManager();
+
+
         addIconToBar();
         progressDialog = new ProgressDialog(this);
         emptyLockListInfo = findViewById(R.id.emptyLockListInfo);
@@ -570,23 +577,6 @@ public class MainActivity extends AppCompatActivity implements AppListAdapter.To
         sendAppListToDB(finalList);
     }
 
-    private void updateStashDB() {
-        for (int i = 0; i<2; i++) {
-            AppUsesData appUsesData = new AppUsesData();
-            appUsesData.setAppName("qwer");
-            appUsesData.setBundle_id("PackageName");
-            appUsesData.setStartTime(11l);
-            appUsesData.setEndTime(10l);
-            appUsesData.setUsageTime(i+"n");
-            appUsesData.setLaunchCount(1+2);
-            appUsesDataArrayList.add(appUsesData);
-        }
 
-        for (int i = 0; i<2; i++) {
-            statsModelArrayList.add(new StatsModel(i+"", appUsesDataArrayList));
-        }
-        UsesStatsDataModel statsModel = new UsesStatsDataModel(usersEmail, statsModelArrayList);
-        db.collection("app_stats").document(usersEmail).set(statsModel);
-    }
 
 }

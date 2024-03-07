@@ -3,33 +3,20 @@ package com.example.appblockr.model;
 import java.util.ArrayList;
 
 public class StatsModel {
-    String date;
-    ArrayList<AppUsesData> appUsesDataArrayList;
+    ArrayList<AppUsesData> appUsageList;
 
     public StatsModel() {}
-    public StatsModel(String date, ArrayList<AppUsesData> appUsesDataArrayList) {
-        this.date = date;
-        this.appUsesDataArrayList = appUsesDataArrayList;
-    }
+    public StatsModel(ArrayList<AppUsesData> appUsesDataArrayList) {
 
-    public String getDate() {
-        return date;
-    }
-
-    public void setDate(String date) {
-        this.date = date;
+        this.appUsageList = appUsesDataArrayList;
     }
 
     public ArrayList<AppUsesData> getDataArrayList() {
-        return appUsesDataArrayList;
+        return appUsageList;
     }
 
     public void setDataArrayList(ArrayList<AppUsesData> appUsesDataArrayList) {
-        this.appUsesDataArrayList = appUsesDataArrayList;
+        this.appUsageList = appUsesDataArrayList;
     }
 
-
-    public int compareTo(StatsModel app) {
-        return this.getDate().compareTo(app.date);
-    }
 }
